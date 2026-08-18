@@ -1,8 +1,361 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Expense Tracker</title><link rel="stylesheet" href="style.css"><script src="https://cdn.jsdelivr.net/npm/chart.js"></script></head>
-<body><div class="app"><header><div><h1>Expense Tracker</h1><p>Track income, expenses and spending patterns.</p></div><button id="clearAllBtn" class="danger">Clear All</button></header>
-<section class="summary"><div><span>Balance</span><h2 id="balance">₹0.00</h2></div><div><span>Income</span><h2 id="income">₹0.00</h2></div><div><span>Expense</span><h2 id="expense">₹0.00</h2></div><div><span>Transactions</span><h2 id="count">0</h2></div></section>
-<section class="grid"><article class="panel"><h2>Add Transaction</h2><form id="form"><label>Title<input id="title" required placeholder="Grocery shopping"></label><div class="row"><label>Amount<input id="amount" type="number" min="0.01" step="0.01" required></label><label>Type<select id="type"><option value="expense">Expense</option><option value="income">Income</option></select></label></div><div class="row"><label>Category<select id="category"><option>Food</option><option>Travel</option><option>Shopping</option><option>Education</option><option>Bills</option><option>Entertainment</option><option>Health</option><option>Salary</option><option>Other</option></select></label><label>Date<input id="date" type="date" required></label></div><button class="primary" type="submit">Add Transaction</button></form></article>
-<article class="panel"><div class="panel-head"><h2>Transactions</h2><div class="filters"><input id="search" placeholder="Search..."><select id="filterType"><option value="all">All</option><option value="income">Income</option><option value="expense">Expense</option></select><select id="filterCategory"><option value="all">All categories</option><option>Food</option><option>Travel</option><option>Shopping</option><option>Education</option><option>Bills</option><option>Entertainment</option><option>Health</option><option>Salary</option><option>Other</option></select></div></div><div id="list"></div></article></section>
-<section class="charts"><article class="panel"><h2>Expenses by Category</h2><div class="chartbox"><canvas id="categoryChart"></canvas></div></article><article class="panel"><h2>Income vs Expense</h2><div class="chartbox"><canvas id="monthlyChart"></canvas></div></article></section></div><script src="charts.js"></script><script src="script.js"></script></body></html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Expense Tracker</title>
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+    <div class="app">
+
+        <!-- ==================== HEADER ==================== -->
+        <header class="header">
+
+            <div class="header-content">
+                <h1>Expense Tracker</h1>
+                <p>Track income, expenses and spending patterns.</p>
+            </div>
+
+            <button
+                id="clearAllBtn"
+                class="danger"
+                type="button"
+            >
+                Clear All
+            </button>
+
+        </header>
+
+
+        <!-- ==================== SUMMARY ==================== -->
+        <section class="summary">
+
+            <div class="summary-card">
+                <span>Balance</span>
+                <h2 id="balance">₹0.00</h2>
+            </div>
+
+            <div class="summary-card">
+                <span>Income</span>
+                <h2 id="income">₹0.00</h2>
+            </div>
+
+            <div class="summary-card">
+                <span>Expense</span>
+                <h2 id="expense">₹0.00</h2>
+            </div>
+
+            <div class="summary-card">
+                <span>Transactions</span>
+                <h2 id="count">0</h2>
+            </div>
+
+        </section>
+
+
+        <!-- ==================== MAIN CONTENT ==================== -->
+        <section class="grid">
+
+            <!-- ==================== ADD TRANSACTION ==================== -->
+            <article class="panel">
+
+                <h2>Add Transaction</h2>
+
+                <form id="form">
+
+                    <!-- Transaction Title -->
+                    <div class="form-group">
+
+                        <label for="title">
+                            Title
+                        </label>
+
+                        <input
+                            type="text"
+                            id="title"
+                            placeholder="Grocery shopping"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- Amount + Type -->
+                    <div class="row">
+
+                        <div class="form-group">
+
+                            <label for="amount">
+                                Amount
+                            </label>
+
+                            <input
+                                type="number"
+                                id="amount"
+                                min="0.01"
+                                step="0.01"
+                                placeholder="500"
+                                required
+                            >
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="type">
+                                Type
+                            </label>
+
+                            <select id="type">
+
+                                <option value="expense">
+                                    Expense
+                                </option>
+
+                                <option value="income">
+                                    Income
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Category + Date -->
+                    <div class="row">
+
+                        <div class="form-group">
+
+                            <label for="category">
+                                Category
+                            </label>
+
+                            <select id="category">
+
+                                <option value="Food">
+                                    Food
+                                </option>
+
+                                <option value="Travel">
+                                    Travel
+                                </option>
+
+                                <option value="Shopping">
+                                    Shopping
+                                </option>
+
+                                <option value="Education">
+                                    Education
+                                </option>
+
+                                <option value="Bills">
+                                    Bills
+                                </option>
+
+                                <option value="Entertainment">
+                                    Entertainment
+                                </option>
+
+                                <option value="Health">
+                                    Health
+                                </option>
+
+                                <option value="Salary">
+                                    Salary
+                                </option>
+
+                                <option value="Other">
+                                    Other
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="date">
+                                Date
+                            </label>
+
+                            <input
+                                type="date"
+                                id="date"
+                                required
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Submit Button -->
+                    <button
+                        class="primary"
+                        type="submit"
+                    >
+                        Add Transaction
+                    </button>
+
+                </form>
+
+            </article>
+
+
+            <!-- ==================== TRANSACTIONS ==================== -->
+            <article class="panel">
+
+                <div class="panel-head">
+
+                    <h2>Transactions</h2>
+
+
+                    <!-- Filters -->
+                    <div class="filters">
+
+                        <input
+                            type="search"
+                            id="search"
+                            placeholder="Search..."
+                        >
+
+
+                        <select id="filterType">
+
+                            <option value="all">
+                                All
+                            </option>
+
+                            <option value="income">
+                                Income
+                            </option>
+
+                            <option value="expense">
+                                Expense
+                            </option>
+
+                        </select>
+
+
+                        <select id="filterCategory">
+
+                            <option value="all">
+                                All categories
+                            </option>
+
+                            <option value="Food">
+                                Food
+                            </option>
+
+                            <option value="Travel">
+                                Travel
+                            </option>
+
+                            <option value="Shopping">
+                                Shopping
+                            </option>
+
+                            <option value="Education">
+                                Education
+                            </option>
+
+                            <option value="Bills">
+                                Bills
+                            </option>
+
+                            <option value="Entertainment">
+                                Entertainment
+                            </option>
+
+                            <option value="Health">
+                                Health
+                            </option>
+
+                            <option value="Salary">
+                                Salary
+                            </option>
+
+                            <option value="Other">
+                                Other
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Dynamic Transaction List -->
+                <div id="list">
+
+                    <!-- Transactions will be inserted here by JavaScript -->
+
+                </div>
+
+            </article>
+
+        </section>
+
+
+        <!-- ==================== CHARTS ==================== -->
+        <section class="charts">
+
+
+            <!-- Expenses by Category -->
+            <article class="panel">
+
+                <h2>Expenses by Category</h2>
+
+                <div class="chartbox">
+
+                    <canvas id="categoryChart"></canvas>
+
+                </div>
+
+            </article>
+
+
+            <!-- Income vs Expense -->
+            <article class="panel">
+
+                <h2>Income vs Expense</h2>
+
+                <div class="chartbox">
+
+                    <canvas id="monthlyChart"></canvas>
+
+                </div>
+
+            </article>
+
+        </section>
+
+    </div>
+
+
+    <!-- ==================== JAVASCRIPT ==================== -->
+
+    <!-- Chart configuration -->
+    <script src="charts.js"></script>
+
+    <!-- Main application logic -->
+    <script src="script.js"></script>
+
+</body>
+
+</html>
