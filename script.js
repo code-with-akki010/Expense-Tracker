@@ -1,11 +1,355 @@
-const $=id=>document.getElementById(id);let transactions=JSON.parse(localStorage.getItem('expenseTrackerTransactions')||'[]'),editingId=null;
-$('date').value=new Date().toISOString().split('T')[0];
-const money=n=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR'}).format(n);
-const save=()=>localStorage.setItem('expenseTrackerTransactions',JSON.stringify(transactions));
-function render(){const income=transactions.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0),expense=transactions.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);$('balance').textContent=money(income-expense);$('income').textContent=money(income);$('expense').textContent=money(expense);$('count').textContent=transactions.length;
- const q=$('search').value.toLowerCase(),ft=$('filterType').value,fc=$('filterCategory').value;const rows=transactions.filter(t=>(t.title.toLowerCase().includes(q)||t.category.toLowerCase().includes(q))&&(ft==='all'||t.type===ft)&&(fc==='all'||t.category===fc)).sort((a,b)=>b.date.localeCompare(a.date));
- $('list').innerHTML=rows.length?rows.map(t=>`<div class="transaction"><div><h3>${safe(t.title)}</h3><p class="meta">${safe(t.category)} • ${t.date}</p></div><div class="right"><div class="amount ${t.type}">${t.type==='income'?'+':'-'}${money(t.amount)}</div><div class="actions"><button class="edit" onclick="editTx('${t.id}')">Edit</button><button class="delete" onclick="deleteTx('${t.id}')">Delete</button></div></div></div>`).join(''):'<p class="empty">No matching transactions.</p>';updateCharts(transactions)}
-function safe(v){return v.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
-$('form').addEventListener('submit',e=>{e.preventDefault();const tx={id:editingId||crypto.randomUUID(),title:$('title').value.trim(),amount:Number($('amount').value),type:$('type').value,category:$('category').value,date:$('date').value};transactions=editingId?transactions.map(t=>t.id===editingId?tx:t):[...transactions,tx];editingId=null;save();e.target.reset();$('date').value=new Date().toISOString().split('T')[0];e.target.querySelector('.primary').textContent='Add Transaction';render()});
-window.editTx=id=>{const t=transactions.find(x=>x.id===id);if(!t)return;editingId=id;$('title').value=t.title;$('amount').value=t.amount;$('type').value=t.type;$('category').value=t.category;$('date').value=t.date;$('form').querySelector('.primary').textContent='Update Transaction';$('title').focus()};
-window.deleteTx=id=>{transactions=transactions.filter(t=>t.id!==id);save();render()};$('clearAllBtn').onclick=()=>{if(transactions.length&&confirm('Delete all transactions?')){transactions=[];save();render()}};['search','filterType','filterCategory'].forEach(id=>$(id).addEventListener('input',render));render();
+// ==================== DOM HELPER ====================
+
+const $ = (id) => document.getElementById(id);
+
+
+// ==================== APPLICATION STATE ====================
+
+let transactions = JSON.parse(
+    localStorage.getItem("expenseTrackerTransactions") || "[]"
+);
+
+let editingId = null;
+
+
+// ==================== INITIAL SETUP ====================
+
+$("date").value = new Date().toISOString().split("T")[0];
+
+
+// ==================== UTILITY FUNCTIONS ====================
+
+/**
+ * Format a number as Indian Rupee currency.
+ */
+const money = (amount) => {
+    return new Intl.NumberFormat("en-IN", {
+        style: "currency",
+        currency: "INR"
+    }).format(amount);
+};
+
+
+/**
+ * Save transactions to LocalStorage.
+ */
+const save = () => {
+    localStorage.setItem(
+        "expenseTrackerTransactions",
+        JSON.stringify(transactions)
+    );
+};
+
+
+/**
+ * Escape HTML characters to prevent HTML injection.
+ */
+function safe(value) {
+    return value.replace(
+        /[&<>"']/g,
+        (character) => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#039;"
+        }[character])
+    );
+}
+
+
+// ==================== RENDER TRANSACTIONS ====================
+
+function render() {
+
+    // Calculate total income
+    const income = transactions
+        .filter((transaction) => transaction.type === "income")
+        .reduce(
+            (sum, transaction) => sum + transaction.amount,
+            0
+        );
+
+
+    // Calculate total expenses
+    const expense = transactions
+        .filter((transaction) => transaction.type === "expense")
+        .reduce(
+            (sum, transaction) => sum + transaction.amount,
+            0
+        );
+
+
+    // Update dashboard summary
+    $("balance").textContent = money(income - expense);
+    $("income").textContent = money(income);
+    $("expense").textContent = money(expense);
+    $("count").textContent = transactions.length;
+
+
+    // ==================== FILTERS ====================
+
+    const query = $("search").value.toLowerCase();
+
+    const filterType = $("filterType").value;
+
+    const filterCategory = $("filterCategory").value;
+
+
+    // Filter and sort transactions
+    const rows = transactions
+        .filter((transaction) => {
+
+            const matchesSearch =
+                transaction.title
+                    .toLowerCase()
+                    .includes(query) ||
+                transaction.category
+                    .toLowerCase()
+                    .includes(query);
+
+            const matchesType =
+                filterType === "all" ||
+                transaction.type === filterType;
+
+            const matchesCategory =
+                filterCategory === "all" ||
+                transaction.category === filterCategory;
+
+            return (
+                matchesSearch &&
+                matchesType &&
+                matchesCategory
+            );
+        })
+        .sort((a, b) => b.date.localeCompare(a.date));
+
+
+    // ==================== DISPLAY TRANSACTIONS ====================
+
+    if (rows.length === 0) {
+
+        $("list").innerHTML =
+            '<p class="empty">No matching transactions.</p>';
+
+    } else {
+
+        $("list").innerHTML = rows
+            .map((transaction) => {
+
+                return `
+                    <div class="transaction">
+
+                        <div>
+                            <h3>
+                                ${safe(transaction.title)}
+                            </h3>
+
+                            <p class="meta">
+                                ${safe(transaction.category)}
+                                •
+                                ${transaction.date}
+                            </p>
+                        </div>
+
+
+                        <div class="right">
+
+                            <div class="amount ${transaction.type}">
+                                ${
+                                    transaction.type === "income"
+                                        ? "+"
+                                        : "-"
+                                }${money(transaction.amount)}
+                            </div>
+
+
+                            <div class="actions">
+
+                                <button
+                                    class="edit"
+                                    onclick="editTx('${transaction.id}')"
+                                >
+                                    Edit
+                                </button>
+
+                                <button
+                                    class="delete"
+                                    onclick="deleteTx('${transaction.id}')"
+                                >
+                                    Delete
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                `;
+            })
+            .join("");
+    }
+
+
+    // Update charts
+    updateCharts(transactions);
+}
+
+
+// ==================== ADD / UPDATE TRANSACTION ====================
+
+$("form").addEventListener("submit", (event) => {
+
+    event.preventDefault();
+
+
+    const transaction = {
+
+        id: editingId || crypto.randomUUID(),
+
+        title: $("title").value.trim(),
+
+        amount: Number($("amount").value),
+
+        type: $("type").value,
+
+        category: $("category").value,
+
+        date: $("date").value
+    };
+
+
+    // Update existing transaction
+    if (editingId) {
+
+        transactions = transactions.map((transactionItem) =>
+            transactionItem.id === editingId
+                ? transaction
+                : transactionItem
+        );
+
+    }
+
+    // Add new transaction
+    else {
+
+        transactions = [
+            ...transactions,
+            transaction
+        ];
+    }
+
+
+    // Reset editing state
+    editingId = null;
+
+
+    // Save data
+    save();
+
+
+    // Reset form
+    event.target.reset();
+
+    $("date").value =
+        new Date().toISOString().split("T")[0];
+
+
+    // Reset button text
+    event.target.querySelector(".primary").textContent =
+        "Add Transaction";
+
+
+    // Update UI
+    render();
+});
+
+
+// ==================== EDIT TRANSACTION ====================
+
+window.editTx = (id) => {
+
+    const transaction = transactions.find(
+        (item) => item.id === id
+    );
+
+
+    if (!transaction) {
+        return;
+    }
+
+
+    editingId = id;
+
+
+    // Populate form
+    $("title").value = transaction.title;
+
+    $("amount").value = transaction.amount;
+
+    $("type").value = transaction.type;
+
+    $("category").value = transaction.category;
+
+    $("date").value = transaction.date;
+
+
+    // Change button text
+    $("form").querySelector(".primary").textContent =
+        "Update Transaction";
+
+
+    // Focus title field
+    $("title").focus();
+};
+
+
+// ==================== DELETE TRANSACTION ====================
+
+window.deleteTx = (id) => {
+
+    transactions = transactions.filter(
+        (transaction) => transaction.id !== id
+    );
+
+
+    save();
+
+    render();
+};
+
+
+// ==================== CLEAR ALL TRANSACTIONS ====================
+
+$("clearAllBtn").onclick = () => {
+
+    if (
+        transactions.length &&
+        confirm("Delete all transactions?")
+    ) {
+
+        transactions = [];
+
+        save();
+
+        render();
+    }
+};
+
+
+// ==================== SEARCH & FILTER ====================
+
+[
+    "search",
+    "filterType",
+    "filterCategory"
+].forEach((id) => {
+
+    $(id).addEventListener("input", render);
+
+});
+
+
+// ==================== INITIAL RENDER ====================
+
+render();
